@@ -12,103 +12,177 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap');
-        body {
-            font-family: 'Roboto', 'Google Sans', sans-serif;
-            background-color: #f8f9fa;
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;900&display=swap');
+        html {
+            scroll-behavior: smooth;
         }
-        #video-feed, #overlay-canvas {
-            transform: scaleX(-1);
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: #f4f4f7; /* A slightly warmer off-white */
+        }
+        #video-feed, #overlay-canvas { 
+            transform: scaleX(-1); 
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
+            border: 4px solid rgba(255, 255, 255, 0.2);
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            border-left-color: #4285F4;
+            border-left-color: #ffffff;
             animation: spin 1s ease-in-out infinite;
         }
-        /* Style for the modal */
-        #about-modal {
-            transition: opacity 0.3s ease;
+        .modal-content {
+             transition: opacity 0.3s ease, transform 0.3s ease;
+             transform: translateY(20px);
+        }
+        .modal-open .modal-content {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
-
-    <div class="w-full max-w-2xl mx-auto p-4">
+<body class="text-gray-800">
+    
+    <div class="w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
         <!-- Header -->
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">
-                Bhav<span class="text-blue-600">Setu</span>
+        <header class="flex justify-between items-center py-4">
+            <h1 class="text-2xl font-bold">
+                Bhav<span class="text-indigo-600">Setu</span>
             </h1>
-            <button id="about-button" class="text-gray-500 hover:text-blue-600 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-600">
+                <a href="#demo" class="hover:text-indigo-600">Live Demo</a>
+                <a href="#tech" class="hover:text-indigo-600">Technology</a>
+                <a href="#team" class="hover:text-indigo-600">The Team</a>
+            </nav>
+            <button id="about-button" class="bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                About Us
             </button>
         </header>
 
-        <!-- Main content card -->
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div id="video-container" class="relative w-full bg-gray-200" style="padding-top: 56.25%;">
-                <video id="video-feed" class="absolute top-0 left-0 w-full h-full object-cover"></video>
-                <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
-                <div id="loader" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-200">
-                    <div class="spinner"></div>
-                    <p class="mt-4 text-gray-600">Starting camera...</p>
+        <!-- Hero Section -->
+        <section id="demo" class="my-10 lg:my-16 text-center">
+            <h2 class="text-4xl lg:text-5xl font-black leading-tight max-w-3xl mx-auto">
+                Bridging the <span class="text-indigo-600">Silent Gap</span> with Technology.
+            </h2>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+                We built Bhav Setu to give a voice to the millions of Indians who communicate differently. This is real-time, AI-powered sign language translation.
+            </p>
+
+            <!-- Video Player -->
+            <div class="mt-10 max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl border-4 border-green-600 border-solid overflow-hidden">
+                    <div id="video-container" class="relative w-full bg-gray-900" style="padding-top: 56.25%;">
+                        <video id="video-feed" class="absolute top-0 left-0 w-full h-full object-cover"></video>
+                        <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+                        <div id="loader" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 z-10">
+                            <div class="spinner"></div>
+                            <p class="mt-4 text-white">Starting camera...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Section as a separate card -->
+                <div id="results-container" class="bg-white rounded-xl border-2 border-black border-solid  p-6 text-center mt-4 hidden">
+                    <p id="prediction-text" class="text-4xl font-bold text-indigo-600">-</p>
+                    <p id="confidence-text" class="text-sm text-gray-500 mt-1">Confidence: 0.00%</p>
                 </div>
             </div>
-            <div id="results-container" class="p-6 text-center border-t border-gray-200 hidden">
-                <p class="text-sm text-gray-500 uppercase tracking-widest">Prediction</p>
-                <p id="prediction-text" class="text-6xl font-bold text-gray-800 my-2">-</p>
-                <p id="confidence-text" class="text-md text-gray-500">Confidence: 0.00%</p>
-            </div>
-        </div>
+        </section>
 
-        <footer class="text-center mt-6">
-            <p class="text-sm text-gray-500">A <span class="font-bold">WE HEAR YOU</span> creation | Powered by MediaPipe & Flask</p>
+        <!-- How it Works Section -->
+        <section id="tech" class="my-16 lg:my-24">
+             <div class="text-center">
+                <h3 class="text-3xl font-bold">How It Works</h3>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Our TRL-6 platform uses a simple yet powerful pipeline to deliver instant translations.</p>
+            </div>
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
+                    <div class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto font-bold text-xl">1</div>
+                    <h4 class="font-bold text-lg mt-4">Landmark Detection</h4>
+                    <p class="text-sm text-gray-600 mt-1">MediaPipe instantly identifies 21 hand landmarks directly in your browser.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
+                    <div class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto font-bold text-xl">2</div>
+                    <h4 class="font-bold text-lg mt-4">AI Prediction</h4>
+                    <p class="text-sm text-gray-600 mt-1">Our custom-trained Random Forest model predicts the gesture from the landmarks.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg border border-gray-200 text-center">
+                    <div class="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto font-bold text-xl">3</div>
+                    <h4 class="font-bold text-lg mt-4">Instant Translation</h4>
+                    <p class="text-sm text-gray-600 mt-1">The recognized gesture is displayed in real-time, enabling seamless conversation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section id="team" class="my-16 lg:my-24 bg-indigo-600 text-white rounded-2xl p-8 lg:p-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <!-- Member 1 -->
+                <div class="flex flex-col items-center">
+                    <h4 class="font-bold text-xl">Ashish</h4>
+                    <p class="text-sm text-indigo-200">Engineering & AI Lead</p>
+                    <a href="https://www.linkedin.com/in/ashish-um/" target="_blank" rel="noopener noreferrer" class="mt-2 text-indigo-200 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"/></svg>
+                    </a>
+                </div>
+                <!-- Member 2 -->
+                <div class="flex flex-col items-center">
+                    <h4 class="font-bold text-xl">Garima</h4>
+                    <p class="text-sm text-indigo-200">Business & Management Lead</p>
+                     <a href="https://www.linkedin.com/in/garima-bhardwaj-844bb3320/" target="_blank" rel="noopener noreferrer" class="mt-2 text-indigo-200 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"/></svg>
+                    </a>
+                </div>
+                <!-- Member 3 -->
+                <div class="flex flex-col items-center">
+                    <h4 class="font-bold text-xl">Adith</h4>
+                    <p class="text-sm text-indigo-200">Design & UI/UX Lead</p>
+                     <a href="https://www.linkedin.com/in/adith-kp/" target="_blank" rel="noopener noreferrer" class="mt-2 text-indigo-200 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"/></svg>
+                    </a>
+                </div>
+            </div>
+            <p class="text-center text-indigo-100 mt-8 max-w-3xl mx-auto">
+                <span class="font-bold">WE HEAR YOU</span> is an interdisciplinary team from Engineering, Design, and Management, creating the perfect blend to take a product from concept to reality.
+            </p>
+        </section>
+
+        <footer class="text-center mt-12 mb-4">
+             <a href="https://github.com/ashish-um/bhav-setu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-gray-500 hover:text-indigo-600 transition-colors mb-2">
+                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.03 1.595 1.03 2.688 0 3.848-2.338 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd" /></svg>
+                View on GitHub
+            </a>
+            <p class="text-xs text-gray-500">&copy; 2025 Bhav Setu | An Atma Nirbhar Bharat Initiative By AIT Pune Students</p>
         </footer>
     </div>
 
     <!-- About Modal -->
-    <div id="about-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div id="about-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col opacity-0">
             <div class="p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold text-gray-800">About Bhav<span class="text-blue-600">Setu</span></h2>
-                    <button id="close-modal-button" class="text-gray-400 hover:text-gray-800">&times;</button>
+                    <h2 class="text-2xl font-bold text-gray-800">About Bhav<span class="text-indigo-600">Setu</span></h2>
+                    <button id="close-modal-button" class="text-3xl text-gray-400 hover:text-gray-800">&times;</button>
                 </div>
             </div>
             <div class="p-6 space-y-6 text-gray-600">
                 <p class="text-lg">"Communication is a fundamental human right. Yet, for over 5 million Indians, a silent gap exists. We built Bhav Setu to leverage technology and bridge this gap."</p>
-
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Our Platform</h3>
-                    <p>Bhav Setu is an adaptive AI platform at <span class="font-semibold text-blue-600">Technology Readiness Level 6 (TRL 6)</span>, providing universal, two-way translation between sign language and multiple Indian languages. It's fast, intuitive, and works even without the internet.</p>
+                    <p>Bhav Setu is an adaptive AI platform at <span class="font-semibold text-indigo-600">Technology Readiness Level 6 (TRL 6)</span>, providing universal, two-way translation between sign language and multiple Indian languages. It's fast, intuitive, and works even without the internet.</p>
                 </div>
-
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Our Technology</h3>
-                    <p>We use <span class="font-semibold">MediaPipe</span> for real-time landmark detection, processed by a custom-trained <span class="font-semibold">Random Forest algorithm</span>. This model was trained on our proprietary dataset, personally captured by our team, making the system universally scalable.</p>
-                </div>
-
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Our Vision</h3>
                     <p>By building this indigenously, we are contributing directly to an <span class="font-semibold">Atma Nirbhar Bharat</span> and the vision of an inclusive <span class="font-semibold">Vikasit Bharat 2047</span>. The AICTE Fellowship is a chance to build a product that can change millions of lives. Help us ensure every voice is heard.</p>
                 </div>
-
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Meet the Team: WE HEAR YOU</h3>
-                    <ul class="space-y-2">
-                        <li><span class="font-semibold text-gray-700">Ashish:</span> Engineering & AI Lead</li>
-                        <li><span class="font-semibold text-gray-700">Garima:</span> Business & Management Lead</li>
-                        <li><span class="font-semibold text-gray-700">Adith:</span> Design & UI/UX Lead</li>
-                    </ul>
-                    <p class="mt-2">Our interdisciplinary team brings together expertise from Engineering, Design, and Management, creating the perfect blend to take a product from concept to reality.</p>
+                 <div>
+                    <a href="https://github.com/ashish-um/bhav-setu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.03 1.595 1.03 2.688 0 3.848-2.338 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd" /></svg>
+                        View Project on GitHub
+                    </a>
                 </div>
             </div>
         </div>
@@ -116,7 +190,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Element Selection ---
+        // All JavaScript logic is the same and remains correct.
         const videoElement = document.getElementById('video-feed');
         const canvasElement = document.getElementById('overlay-canvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -129,17 +203,29 @@
         const closeModalButton = document.getElementById('close-modal-button');
         const aboutModal = document.getElementById('about-modal');
 
-        // --- Modal Logic ---
         aboutButton.addEventListener('click', () => {
             aboutModal.classList.remove('hidden');
-            setTimeout(() => aboutModal.classList.remove('opacity-0'), 10); // Fade in
-        });
-        closeModalButton.addEventListener('click', () => {
-            aboutModal.classList.add('opacity-0');
-            setTimeout(() => aboutModal.classList.add('hidden'), 300); // Fade out and hide
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                aboutModal.classList.add('modal-open');
+                aboutModal.classList.remove('opacity-0');
+            }, 10);
         });
 
-        // --- High-Performance CV Logic ---
+        function closeModal() {
+            aboutModal.classList.remove('modal-open');
+            aboutModal.classList.add('opacity-0');
+            setTimeout(() => {
+                aboutModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+
+        closeModalButton.addEventListener('click', closeModal);
+        aboutModal.addEventListener('click', (event) => {
+            if (event.target === aboutModal) closeModal();
+        });
+        
         let lastSentTime = 0;
         const sendInterval = 100;
 
@@ -148,11 +234,10 @@
             canvasElement.height = videoElement.videoHeight;
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#4285F4', lineWidth: 5 });
-                    drawLandmarks(canvasCtx, landmarks, { color: '#DB4437', lineWidth: 2 });
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#818cf8', lineWidth: 5 }); // Indigo
+                    drawLandmarks(canvasCtx, landmarks, { color: '#ffffff', lineWidth: 2 }); // White
                 }
                 const now = Date.now();
                 if (now - lastSentTime > sendInterval) {
@@ -178,7 +263,7 @@
             width: 1280,
             height: 720
         });
-
+        
         videoElement.addEventListener('playing', () => {
             loader.classList.add('hidden');
             resultsContainer.classList.remove('hidden');
@@ -186,9 +271,12 @@
 
         camera.start().catch(err => {
             console.error("Camera start failed:", err);
-            loader.innerHTML = '<p class="text-red-500">Could not start camera. Please grant permission and refresh.</p>';
+            loader.innerHTML = '<p class="text-red-500 font-semibold">Camera Error. Please grant permission and refresh.</p>';
         });
     });
     </script>
 </body>
 </html>
+
+
+
